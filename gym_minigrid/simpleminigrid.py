@@ -10,6 +10,8 @@ class SimpleGridEnv(MiniGridEnv):
     """
         Simplified mini grid environment with only movement actions
     """
+    
+
     # Enumeration of possible actions
     class Actions(IntEnum):
         # Turn left, turn right, move forward
@@ -73,7 +75,8 @@ class SimpleGridEnv(MiniGridEnv):
         # Toggle/activate an object
         # Always Try
         if fwd_cell:
-            fwd_cell.toggle(self, fwd_pos)
+            if isinstance(fwd_cell, Door) and fwd_cell.is_locked: 
+                fwd_cell.toggle(self, fwd_pos)
 
        
 
@@ -91,6 +94,7 @@ class SimpleDoorKey(SimpleGridEnv):
     Environment with a door and key, sparse reward
     """
 
+    
     def __init__(self, size=8):
         super().__init__(
             grid_size=size,
@@ -128,34 +132,39 @@ class SimpleDoorKey(SimpleGridEnv):
 
         self.mission = "use the key to open the door and then get to the goal"
 
-class DoorKeyEnv5x5(SimpleDoorKey):
+class SimpleDoorKey5x5(SimpleDoorKey):
     def __init__(self):
         super().__init__(size=5)
 
-class DoorKeyEnv6x6(SimpleDoorKey):
+class SimpleDoorKey6x6(SimpleDoorKey):
     def __init__(self):
         super().__init__(size=6)
 
-class DoorKeyEnv16x16(SimpleDoorKey):
+class SimpleDoorKey8x8(SimpleDoorKey):
+    def __init__(self):
+        super().__init__(size=8)
+
+class SimpleDoorKey16x16(SimpleDoorKey):
     def __init__(self):
         super().__init__(size=16)
 
+
 register(
     id='MiniGrid-Simple-DoorKey-5x5-v0',
-    entry_point='gym_minigrid.envs:DoorKeyEnv5x5'
+    entry_point='gym_minigrid.simpleminigrid:SimpleDoorKey5x5'
 )
 
 register(
     id='MiniGrid-Simple-DoorKey-6x6-v0',
-    entry_point='gym_minigrid.envs:DoorKeyEnv6x6'
+    entry_point='gym_minigrid.simpleminigrid:SimpleDoorKey6x6'
 )
 
 register(
     id='MiniGrid-Simple-DoorKey-8x8-v0',
-    entry_point='gym_minigrid.envs:DoorKeyEnv'
+    entry_point='gym_minigrid.simpleminigrid:SimpleDoorKey8x8'
 )
 
 register(
     id='MiniGrid-Simple-DoorKey-16x16-v0',
-    entry_point='gym_minigrid.envs:DoorKeyEnv16x16'
+    entry_point='gym_minigrid.simpleminigrid:SimpleDoorKey16x16'
 )
