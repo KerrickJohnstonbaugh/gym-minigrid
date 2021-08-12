@@ -10,8 +10,20 @@ class SimpleGridEnv(MiniGridEnv):
     """
         Simplified mini grid environment with only movement actions
     """
-    
+    def __init__(
+        self,
+        grid_size=None,
+        width=None,
+        height=None,
+        max_steps=1000,
+        see_through_walls=False,
+        seed=2,
+        agent_view_size=7, gamma = 0.99, sparse = False
+    ):
+        super().__init__(grid_size, width, height, max_steps, see_through_walls, seed, agent_view_size)
 
+        self.gamma = gamma
+        self.sparse = sparse
     # Enumeration of possible actions
     class Actions(IntEnum):
         # Turn left, turn right, move forward
@@ -25,8 +37,10 @@ class SimpleGridEnv(MiniGridEnv):
         Always try to toggle, pick up
         '''
         self.step_count += 1
-
-        reward = 0
+        if self.sparse:
+            reward = 0
+        else:
+            reward = -1
         done = False
 
         # Get the position in front of the agent
@@ -51,7 +65,10 @@ class SimpleGridEnv(MiniGridEnv):
                 self.agent_pos = fwd_pos
             if fwd_cell != None and fwd_cell.type == 'goal':
                 done = True
-                reward = self._reward()
+                if self.sparse:
+                    reward = self.gamma**self.step_count
+                else:
+                    reward = 0
             if fwd_cell != None and fwd_cell.type == 'lava':
                 done = True
 
@@ -88,7 +105,65 @@ class SimpleGridEnv(MiniGridEnv):
         obs = self.gen_obs()
 
         return obs, reward, done, {}
-    
+    def render(self, mode='human', close=False, highlight=False, tile_size=TILE_PIXELS):
+        """
+        Render the whole-grid human view
+        """
+
+        if close:
+            if self.window:
+                self.window.close()
+            return
+
+        if mode == 'human' and not self.window:
+            import gym_minigrid.window
+            self.window = gym_minigrid.window.Window('gym_minigrid')
+            self.window.show(block=False)
+
+        # Compute which cells are visible to the agent
+        _, vis_mask = self.gen_obs_grid()
+
+        # Compute the world coordinates of the bottom-left corner
+        # of the agent's view area
+        f_vec = self.dir_vec
+        r_vec = self.right_vec
+        top_left = self.agent_pos + f_vec * (self.agent_view_size-1) - r_vec * (self.agent_view_size // 2)
+
+        # Mask of which cells to highlight
+        highlight_mask = np.zeros(shape=(self.width, self.height), dtype=np.bool)
+
+        # For each cell in the visibility mask
+        for vis_j in range(0, self.agent_view_size):
+            for vis_i in range(0, self.agent_view_size):
+                # If this cell is not visible, don't highlight it
+                if not vis_mask[vis_i, vis_j]:
+                    continue
+
+                # Compute the world coordinates of this cell
+                abs_i, abs_j = top_left - (f_vec * vis_j) + (r_vec * vis_i)
+
+                if abs_i < 0 or abs_i >= self.width:
+                    continue
+                if abs_j < 0 or abs_j >= self.height:
+                    continue
+
+                # Mark this cell to be highlighted
+                # highlight_mask[abs_i, abs_j] = True
+
+        # Render the whole grid
+        img = self.grid.render(
+            tile_size,
+            self.agent_pos,
+            self.agent_dir,
+            highlight_mask=highlight_mask if highlight else None
+        )
+
+        if mode == 'human':
+            self.window.set_caption(self.mission)
+            self.window.show_img(img)
+
+        return img
+
 class SimpleDoorKey(SimpleGridEnv):
     """
     Environment with a door and key, sparse reward

@@ -1,0 +1,24 @@
+act: tanh
+hiddens:
+- 64
+- 64
+input_dim: !!python/object/apply:numpy.core.multiarray.scalar
+- !!python/object/apply:numpy.dtype
+  args:
+  - i8
+  - false
+  - true
+  state: !!python/tuple
+  - 3
+  - <
+  - null
+  - null
+  - null
+  - -1
+  - -1
+  - 0
+- !!binary |
+  ACwBAAAAAAA=
+lr: 0.001
+use_lin: regular
+z_dim: 16

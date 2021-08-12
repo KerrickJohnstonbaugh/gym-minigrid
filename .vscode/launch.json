@@ -1,0 +1,74 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+    
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Test modified lock-key",
+            "type": "python",
+            "request": "launch",
+            "program": "test_modified_lock.py",
+            "console": "integratedTerminal",
+            "args": []
+        },
+        {
+            "name": "Generate Dataset for feature extractor",
+            "type": "python",
+            "request": "launch",
+            "program": "generate_feature_dataset.py",
+            "console": "integratedTerminal",
+            "args": []
+        },
+        {
+            "name": "Dataset test",
+            "type": "python",
+            "request": "launch",
+            "program": "image_utils.py",
+            "console": "integratedTerminal",
+            "args": []
+        },
+        {
+            "name": "train autoencoder",
+            "type": "python",
+            "request": "launch",
+            "program": "train_autoencoder.py",
+            "console": "integratedTerminal",
+            "args": ["--max_epochs", "200", "--default_root_dir", "./results/ae/", "--model", "ae", "--z_dim", "16", "--hiddens", "64,64"]
+        },
+        {
+            "name": "train conv autoencoder",
+            "type": "python",
+            "request": "launch",
+            "justMyCode": false,
+            "program": "train_autoencoder.py",
+            "console": "integratedTerminal",
+            "args": ["--max_epochs", "200", "--default_root_dir", "./results/convae/8x8/", "--train_pth", "data/8x8-random.h5",
+                "--val_pth", "data/8x8-random.h5", "--model", "convae", "--z_dim", "16","--batch_size","128"]
+        },
+        {
+            "name": "view results",
+            "type": "python",
+            "request": "launch",
+            "program": "view_trained_results.py",
+            "console": "integratedTerminal",
+            "args": ["--exp_folder", "results/convae/8x8/lightning_logs/version_15/checkpoints"]
+        },
+        {
+            "name": "train DQN lock-key",
+            "type": "python",
+            "request": "launch",
+            "program": "DQN_minigrid.py",
+            "console": "integratedTerminal",
+            "args": ["--exp_folder", "results/convae/8x8/lightning_logs/version_15/checkpoints"]
+        },
+    ]
+}
