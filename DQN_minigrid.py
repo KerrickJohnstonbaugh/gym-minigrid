@@ -6,8 +6,6 @@ import numpy as np
 from collections import deque
 import matplotlib.pyplot as plt
 import gym_minigrid.simpleminigrid
-from models.utils import get_model, get_model_class
-import glob
 
 seed = 4
 env = gym.make('MiniGrid-Simple-DoorKey-8x8-v0')
@@ -31,37 +29,19 @@ def dqn(args, n_episodes=1000, max_t=10000000, eps_start=1.0, eps_end=0.01, eps_
         eps_end (float): minimum value of epsilon
         eps_decay (float): multiplicative factor (per episode) for decreasing epsilon
     """
-    folder = args.exp_folder
-    print("Running results in following folder:")
-    print(folder)
-
-
-    #choose best checkpointed model for creating video
-    models = glob.glob(folder + '/*.ckpt')
-    best = sorted(models, key= lambda x: float(x.split('val_loss=')[1].split('.ckpt')[0]), reverse=False)[0]
-    #TODO: for future experiments, get from arg.yaml file
-    feature_extractor = get_model_class('convae').load_from_checkpoint(checkpoint_path=best)
-
+    
     scores = []                        # list containing scores from each episode
     scores_window = deque(maxlen=100)  # last 100 scores
     eps = eps_start                    # initialize epsilon
     for i_episode in range(1, n_episodes+1):
         env.seed(seed)
-        env.reset()
-        state_img = torch.tensor(env.render('rgb_array')).permute(2,0,1)/255.0 # data massaging
-        with torch.no_grad():
-            state = feature_extractor.encode(state_img.unsqueeze(0))
-
+        state = env.reset()
         score = 0
         step_count = 0
         while(1):
             step_count += 1
-            #env.render()
             action = agent.act(state, eps)
-            _, reward, done, _ = env.step(action)
-            next_state_img = torch.tensor(env.render('rgb_array')).permute(2,0,1)/255.0
-            with torch.no_grad():
-                next_state = feature_extractor.encode(next_state_img.unsqueeze(0))
+            next_state, reward, done, _ = env.step(action)
             agent.step(state, action, reward, next_state, done)
             state = next_state
             score += reward
@@ -92,27 +72,16 @@ def main(args):
     plt.xlabel('Episode #')
     plt.show()
 
-    folder = args.exp_folder
-    models = glob.glob(folder + '/*.ckpt')
-    best = sorted(models, key= lambda x: float(x.split('val_loss=')[1].split('.ckpt')[0]), reverse=False)[0]
-    #TODO: for future experiments, get from arg.yaml file
-    feature_extractor = get_model_class('convae').load_from_checkpoint(checkpoint_path=best)
     agent.qnetwork_local.load_state_dict(torch.load('8x8checkpoint.pth'))
 
     for i in range(100):
         env.seed(seed)
-        env.reset()
-        state_img = torch.tensor(env.render('rgb_array')).permute(2,0,1)/255.0 # data massaging
-        with torch.no_grad():
-            state = feature_extractor.encode(state_img.unsqueeze(0))
+        state = env.reset()
         ret = 0
         for j in range(1000):
             action = agent.act(state)
             env.render()
-            _, reward, done, _ = env.step(action)
-            state_img = torch.tensor(env.render('rgb_array')).permute(2,0,1)/255.0 # data massaging
-            with torch.no_grad():
-                state = feature_extractor.encode(state_img.unsqueeze(0))
+            state, reward, done, _ = env.step(action)
             ret += reward
             if done:
                 print(ret)

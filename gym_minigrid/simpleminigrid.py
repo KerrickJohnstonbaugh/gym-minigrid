@@ -1,5 +1,8 @@
 from gym_minigrid.minigrid import *
 from gym_minigrid.register import register
+import glob 
+from models.utils import get_model_class
+import torch
 
 class SimpleKey(Key):
     def can_overlap(self):
@@ -20,10 +23,12 @@ class SimpleGridEnv(MiniGridEnv):
         seed=2,
         agent_view_size=7, gamma = 0.99, sparse = False
     ):
-        super().__init__(grid_size, width, height, max_steps, see_through_walls, seed, agent_view_size)
-
+        
         self.gamma = gamma
         self.sparse = sparse
+        super().__init__(grid_size, width, height, max_steps, see_through_walls, seed, agent_view_size)
+        self.action_space = spaces.Discrete(3)
+        
     # Enumeration of possible actions
     class Actions(IntEnum):
         # Turn left, turn right, move forward
@@ -31,7 +36,7 @@ class SimpleGridEnv(MiniGridEnv):
         right = 1
         forward = 2
     
-
+    
     def step(self, action):
         '''
         Always try to toggle, pick up
@@ -170,11 +175,29 @@ class SimpleDoorKey(SimpleGridEnv):
     """
 
     
-    def __init__(self, size=8):
+    def __init__(self, size=8, decoder_path = 'results/convae/8x8/lightning_logs/version_15/checkpoints'):
+        models = glob.glob(decoder_path + '/*.ckpt')
+        best = sorted(models, key= lambda x: float(x.split('val_loss=')[1].split('.ckpt')[0]), reverse=False)[0]
+        self.encoder = get_model_class('convae').load_from_checkpoint(checkpoint_path=best)
+        
         super().__init__(
             grid_size=size,
             max_steps=10*size*size
         )
+        self.observation_space = spaces.Box(
+            -np.inf, np.inf, shape=(16,), dtype=np.float32
+        )
+        
+
+    def gen_obs(self):
+        
+        image = torch.tensor(self.render('rgb_array')).permute(2,0,1)/255.0
+        with torch.no_grad():
+            obs = self.encoder.encode(image.unsqueeze(0))
+
+        
+        return obs
+
 
     def _gen_grid(self, width, height):
         # Create an empty grid
