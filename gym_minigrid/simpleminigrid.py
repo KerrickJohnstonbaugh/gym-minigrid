@@ -175,7 +175,7 @@ class SimpleDoorKey(SimpleGridEnv):
     """
 
     
-    def __init__(self, size=8, decoder_path = 'results/convae/8x8/lightning_logs/version_15/checkpoints'):
+    def __init__(self, size=8, decoder_path = 'results/convae_bigZ/8x8/lightning_logs/version_0/checkpoints'):
         models = glob.glob(decoder_path + '/*.ckpt')
         best = sorted(models, key= lambda x: float(x.split('val_loss=')[1].split('.ckpt')[0]), reverse=False)[0]
         self.encoder = get_model_class('convae').load_from_checkpoint(checkpoint_path=best)
@@ -185,7 +185,7 @@ class SimpleDoorKey(SimpleGridEnv):
             max_steps=10*size*size
         )
         self.observation_space = spaces.Box(
-            -np.inf, np.inf, shape=(16,), dtype=np.float32
+            -np.inf, np.inf, shape=(100,), dtype=np.float32
         )
         
 
